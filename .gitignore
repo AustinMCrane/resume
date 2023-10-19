@@ -1,2 +1,7 @@
+/tmp
+deploy/terraform/.terraform
+deploy/terraform/terraform.tfstate
+deploy/terraform/.terraform.lock.hcl
 resume
 secrets.env
+cover.cov

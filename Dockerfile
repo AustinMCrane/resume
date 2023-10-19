@@ -6,5 +6,7 @@ RUN go mod download
 RUN go build -o /app/bin/ .
 
 FROM alpine:3.14
+WORKDIR /app/bin
 COPY --from=builder /app/bin/ /app/bin/
-ENTRYPOINT ["/app/bin/resume"]
+COPY --from=builder /app/assets /app/bin/assets
+ENTRYPOINT ["./resume"]
