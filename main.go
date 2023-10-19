@@ -28,7 +28,7 @@ func main() {
 
 func HandleResumeJSON(w http.ResponseWriter, r *http.Request) {
 	resume := GetResume()
-	data, _ := json.Marshal(resume)
+	data, _ := json.MarshalIndent(resume, "", "    ")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)
