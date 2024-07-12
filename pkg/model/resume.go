@@ -1,18 +1,16 @@
-package main
-
-import (
-	"bytes"
-	"html/template"
-	"io/ioutil"
-	"os"
-	"time"
-
-	"github.com/pkg/errors"
-)
+//go:generate mockgen -destination=../mocks/mock_resume.go -package=mocks . ResumeStore
+package model
 
 const (
-	TEMPLATE_PATH = "./assets/templates"
+	SkillLevelBeginner     = "Beginner"
+	SkillLevelIntermediate = "Intermediate"
+	SkillLevelMaster       = "Master"
 )
+
+// ResumeStore is an interface for getting a Resume object.
+type ResumeStore interface {
+	GetResume() (*Resume, error)
+}
 
 type ResumeBasics struct {
 	Name     string `json:"name"`
@@ -62,12 +60,6 @@ type ResumeSkill struct {
 	Level    string   `json:"level"`
 	Keywords []string `json:"keywords"`
 }
-
-const (
-	SkillLevelBeginner     = "Beginner"
-	SkillLevelIntermediate = "Intermediate"
-	SkillLevelMaster       = "Master"
-)
 
 type ResumeInterest struct {
 	Name     string   `json:"name"`
@@ -128,145 +120,4 @@ type Resume struct {
 	Interests  []ResumeInterest  `json:"interests"`
 	References []ResumeReference `json:"references"`
 	Projects   []ResumeProject   `json:"projects"`
-}
-
-type HTMLResume struct {
-	Resume         Resume
-	CalculateYears func(string, string) int
-}
-
-func GetBasics() ResumeBasics {
-	return ResumeBasics{
-		Name:  "Austin Crane",
-		Label: "Software Engineer",
-		Email: "me@austinmcrane.com",
-		URL:   "https://austinmcrane.com",
-		Summary: `
-TODO
-`,
-	}
-}
-
-func GetWorks() []ResumeWork {
-	return []ResumeWork{
-		{
-			Name:      "National Institute For Aviation Research (NIAR)",
-			Position:  "Software Engineer",
-			StartDate: "2013-01-01",
-			EndDate:   "2015-01-01",
-			Summary:   `Robotics and Automation Lab, Software Engineer Mobile Apps.`,
-		},
-		{
-			Name:      "Ennovar",
-			Position:  "Software Engineer Lead",
-			StartDate: "2015-01-01",
-			EndDate:   "2017-01-01",
-			Summary:   "Created and maintained websites and apps for clients.",
-		},
-		{
-			Name:      "AccuWeather",
-			Position:  "Software Engineer",
-			StartDate: "2017-01-01",
-			EndDate:   "2021-01-01",
-			Summary:   "Worked on an enterprise weather platform for sever weather.",
-		},
-		{
-			Name:      "Ad Hoc",
-			Position:  "Software Engineer",
-			StartDate: "2021-01-01",
-			EndDate:   "Present",
-			Summary:   "Work with the Centers for Medicare & Medicaid Services (CMS) to improve the lives of millions of people.",
-		},
-	}
-}
-
-func GetSkills() []ResumeSkill {
-	return []ResumeSkill{
-		{
-			Name:  "Backend Development",
-			Level: SkillLevelMaster,
-			Keywords: []string{
-				"Go",
-				"Ruby on Rails",
-			},
-		},
-		{
-			Name:  "Data Engineering",
-			Level: SkillLevelIntermediate,
-			Keywords: []string{
-				"PostgreSQL",
-				"Redis",
-				"AWS Glue",
-				"Elasticsearch",
-			},
-		},
-		{
-			Name:  "Frontend Development",
-			Level: SkillLevelIntermediate,
-			Keywords: []string{
-				"JavaScript",
-				"HTML",
-				"CSS",
-				"React",
-				"Vue",
-				"Angular",
-			},
-		},
-		{
-			Name:  "DevOps",
-			Level: SkillLevelIntermediate,
-			Keywords: []string{
-				"Terraform",
-				"Docker",
-				"Ansible",
-				"Linux",
-			},
-		},
-	}
-}
-
-func GetResume() Resume {
-	return Resume{
-		Basics: GetBasics(),
-		Work:   GetWorks(),
-		Skills: GetSkills(),
-	}
-}
-
-func GetHTMLResume() (string, error) {
-	f, err := os.Open(TEMPLATE_PATH + "/index.html")
-	if err != nil {
-		return "", errors.Wrap(err, "failed to open template")
-	}
-	defer f.Close()
-	templateBytes, err := ioutil.ReadAll(f)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to read template")
-	}
-
-	t, err := template.New("webpage").Parse(string(templateBytes))
-	if err != nil {
-		return "", errors.Wrap(err, "failed to create template")
-	}
-
-	var buf bytes.Buffer
-	err = t.Execute(&buf, HTMLResume{
-		Resume: GetResume(),
-		CalculateYears: func(startDate, endDate string) int {
-			start, err := time.Parse("2006-01-02", startDate)
-			if err != nil {
-				return 0
-			}
-			end, err := time.Parse("2006-01-02", endDate)
-			if err != nil {
-				return 0
-			}
-			return int(end.Sub(start).Hours() / 24 / 365)
-		},
-	})
-	if err != nil {
-		return "", errors.Wrap(err, "failed to execute template")
-	}
-
-	return buf.String(), nil
 }

@@ -1,46 +1,28 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
+	"os"
 
-	"golang.org/x/crypto/acme/autocert"
-)
-
-var (
-	localDev = flag.Bool("local", false, "Run in local development mode")
+	"github.com/AustinMCrane/resume/pkg/model/memory"
+	"github.com/AustinMCrane/resume/pkg/server"
 )
 
 func main() {
 	flag.Parse()
+	resumeStore := memory.GetResumeStore()
+	resumeServer := server.GetResumeServer(resumeStore)
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", HandleResumeHTML)
-	mux.HandleFunc("/api/resume", HandleResumeJSON)
-	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
-	if *localDev {
-		log.Fatal(http.ListenAndServe(":8080", mux))
-		return
+	mux.HandleFunc("/", resumeServer.HandleResume)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
-	log.Fatal(http.Serve(autocert.NewListener("austinmcrane.com"), mux))
-}
+	portStr := ":" + port
 
-func HandleResumeJSON(w http.ResponseWriter, r *http.Request) {
-	resume := GetResume()
-	data, _ := json.MarshalIndent(resume, "", "    ")
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
-}
-
-func HandleResumeHTML(w http.ResponseWriter, r *http.Request) {
-	str, err := GetHTMLResume()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(str))
+	log.Fatal(http.ListenAndServe(portStr, mux))
 }
