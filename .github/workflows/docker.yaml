@@ -1,0 +1,4 @@
+name: 'Docker Image CI/CD'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

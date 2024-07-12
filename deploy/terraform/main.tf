@@ -7,8 +7,7 @@ terraform {
   }
 }
 
-provider "linode" {
-}
+provider "linode" {}
 
 resource "linode_instance" "austinmcrane" {
     region = "us-central"
