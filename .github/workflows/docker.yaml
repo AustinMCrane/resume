@@ -1,5 +1,7 @@
 name: 'Docker Image CI/CD'
 on: [push]
-runs:
-  using: 'docker'
-  image: 'Dockerfile'
+jobs:
+  docker:
+    runs:
+      using: 'docker'
+      image: 'Dockerfile'
